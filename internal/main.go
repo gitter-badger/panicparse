@@ -28,6 +28,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/kr/pretty"
 	"github.com/maruel/panicparse/Godeps/_workspace/src/github.com/mattn/go-colorable"
 	"github.com/maruel/panicparse/Godeps/_workspace/src/github.com/mattn/go-isatty"
 	"github.com/maruel/panicparse/Godeps/_workspace/src/github.com/mgutz/ansi"
@@ -129,12 +130,15 @@ func Process(in io.Reader, out io.Writer, fullPath bool) error {
 	if err != nil {
 		return err
 	}
+	cache := &stack.Cache{}
+	cache.Augment(goroutines)
 	buckets := stack.SortBuckets(stack.Bucketize(goroutines, true))
 	srcLen, pkgLen := CalcLengths(buckets, fullPath)
 	for _, bucket := range buckets {
 		PrintStackHeader(out, &bucket, fullPath, len(buckets) > 1)
 		fmt.Fprintf(out, "%s\n", PrettyStack(&bucket.Signature, srcLen, pkgLen, fullPath))
 	}
+	log.Printf("%# v", pretty.Formatter(buckets[0].Routines))
 	return err
 }
 
